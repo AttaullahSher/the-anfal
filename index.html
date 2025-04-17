@@ -12,22 +12,109 @@
       body { font-size: 12px; }
       header { padding: 0.5rem; }
       #categoryButtons { display: none; }
-      #categoryMenu { display: block; }
-      #products { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-      .product-card { padding: 0.25rem; height: 200px; }
-      .product-card img { height: 100px; object-fit: contain; }
-      .product-card h3 { font-size: 10px; line-clamp: 1; }
-      .product-card p { font-size: 8px; line-clamp: 1; }
-      #pagination { padding: 0.25rem; }
-      #cartButton img { height: 1rem; }
-      #searchInput { width: 100px; font-size: 10px; padding: 0.25rem; }
-      #backToTop { bottom: 1rem; right: 1rem; padding: 0.25rem; }
-      #variationModal, #productPopup, #cartModal { max-width: 90%; }
-      #variationModalGrid { grid-template-columns: repeat(2, 1fr); }
-      footer { padding: 0.5rem; }
-      footer img { height: 1rem; }
-      .banner { font-size: 10px; padding: 0.25rem; }
-      #menuToggle { display: block; }
+      #categoryMenu { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 0.5rem; 
+        padding: 0.5rem; 
+        background: #f1f5f9; 
+        border-bottom: 1px solid #e5e7eb; 
+        position: sticky; 
+        top: 64px; 
+        z-index: 10; 
+      }
+      #categoryMenu button { 
+        flex: 1 1 30%; 
+        text-align: center; 
+        padding: 0.5rem; 
+        background: #2563eb; 
+        color: white; 
+        border-radius: 0.375rem; 
+        font-size: 10px; 
+        border: none; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+      }
+      #categoryMenu button.active { 
+        background: #1e40af; 
+      }
+      #products { 
+        grid-template-columns: repeat(3, minmax(0, 1fr)); 
+        gap: 0.5rem; 
+        padding: 0; 
+      }
+      .product-card { 
+        padding: 0.25rem; 
+        height: 180px; 
+        width: 100%; 
+        margin: 0; 
+      }
+      .product-card img { 
+        height: 80px; 
+        object-fit: contain; 
+      }
+      .product-card h3 { 
+        font-size: 9px; 
+        line-clamp: 1; 
+      }
+      .product-card p { 
+        font-size: 7px; 
+        line-clamp: 1; 
+      }
+      .price-container { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: flex-start; 
+      }
+      .price-container .sale-price, 
+      .price-container .selling-price { 
+        font-size: 10px; 
+        font-weight: 500; 
+        color: #2563eb; 
+        line-height: 1; 
+      }
+      .price-container .original-price { 
+        font-size: 8px; 
+        color: #dc2626; 
+        text-decoration: line-through; 
+        line-height: 1; 
+      }
+      #pagination { 
+        padding: 0.25rem; 
+      }
+      #cartButton img { 
+        height: 1rem; 
+      }
+      #searchInput { 
+        width: 100px; 
+        font-size: 10px; 
+        padding: 0.25rem; 
+      }
+      #backToTop { 
+        bottom: 1rem; 
+        right: 1rem; 
+        padding: 0.25rem; 
+      }
+      #variationModal, #productPopup, #cartModal { 
+        max-width: 90%; 
+      }
+      #variationModalGrid { 
+        grid-template-columns: repeat(2, 1fr); 
+      }
+      footer { 
+        padding: 0.5rem; 
+      }
+      footer img { 
+        height: 1rem; 
+      }
+      .banner { 
+        font-size: 10px; 
+        padding: 0.25rem; 
+      }
+      #menuToggle { 
+        display: none; 
+      }
     }
     #menuToggle {
       display: none;
@@ -46,8 +133,13 @@
       z-index: 10;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    #categoryMenu.active { display: block; }
-    .menu-item { padding: 0.5rem; font-size: 12px; }
+    #categoryMenu.active { 
+      display: block; 
+    }
+    .menu-item { 
+      padding: 0.5rem; 
+      font-size: 12px; 
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -59,7 +151,9 @@
   <header class="bg-white shadow sticky top-0 z-10">
     <div class="container mx-auto flex items-center justify-between py-4 px-4">
       <div class="flex items-center">
-        <img src="logo.png" alt="The Anfal Logo" class="h-10 mr-4" onerror="this.src='placeholder.jpg'">
+        <a href="#" id="logoLink">
+          <img src="logo.png" alt="The Anfal Logo" class="h-10 mr-4" onerror="this.src='placeholder.jpg'">
+        </a>
         <h1 class="text-xl font-bold">The Anfal</h1>
       </div>
       <div class="relative flex items-center">
@@ -214,13 +308,14 @@
     const backToTop = document.getElementById("backToTop");
     const menuToggle = document.getElementById("menuToggle");
     const categoryMenu = document.getElementById("categoryMenu");
+    const logoLink = document.getElementById("logoLink");
 
     let allProducts = [];
     let groupedProducts = [];
     let cart = [];
     let currentCategory = "Featured";
     let currentSearchQuery = "";
-    const productsPerPage = 50;
+    const productsPerPage = 6; // Adjusted for mobile to show 6 products per page
     let currentPage = 1;
 
     function loadCart() {
@@ -395,7 +490,7 @@
       productPopupPrice.textContent = `AED ${priceToShow.toFixed(2)}`;
       if (base.salePrice && base.salePrice < base.sellingPrice) {
         productPopupPrice.innerHTML = `
-          <span class="text-sm text-red-600 line-through mr-2">AED ${base.sellingPrice.toFixed(2)}</span>
+          <span class="text-sm text-red-600 line-through mr-2">${base.sellingPrice.toFixed(2)}</span>
           <span class="text-lg font-medium text-blue-600">AED ${base.salePrice.toFixed(2)}</span>
         `;
       } else {
@@ -502,6 +597,12 @@
             categoryButtons.innerHTML = categories.map(cat => `
               <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow ${cat === "Featured" ? "bg-blue-800" : ""}" data-category="${cat}">${cat}</button>
             `).join("");
+            
+            // Populate mobile category menu
+            categoryMenu.innerHTML = categories.map(cat => `
+              <button class="menu-item" data-category="${cat}" ${cat === "Featured" ? 'class="active"' : ""}>${cat}</button>
+            `).join("");
+            
             displayProducts("Featured");
             updateCart();
 
@@ -539,14 +640,17 @@
     function displayProducts(category, searchQuery = "") {
       let filteredGroups = groupedProducts;
 
-      if (category === "Featured") {
-        filteredGroups = groupedProducts.filter(group => group.variants.some(v => v.featured === "Y"));
-      } else if (category !== "All") {
-        filteredGroups = groupedProducts.filter(group => group.variants[0].category === category);
+      // Apply category filter only if no search query is present
+      if (!searchQuery) {
+        if (category === "Featured") {
+          filteredGroups = groupedProducts.filter(group => group.variants.some(v => v.featured === "Y"));
+        } else if (category !== "All") {
+          filteredGroups = groupedProducts.filter(group => group.variants[0].category === category);
+        }
       }
 
       if (searchQuery) {
-        filteredGroups = filteredGroups.filter(group => 
+        filteredGroups = groupedProducts.filter(group => 
           group.variants[0].title.toLowerCase().includes(searchQuery) || 
           group.model.toLowerCase().includes(searchQuery)
         );
@@ -561,9 +665,13 @@
         const base = group.variants[0];
         const isOnSale = base.salePrice && base.salePrice < base.sellingPrice;
         const priceDisplay = isOnSale
-          ? `<span class="text-sm text-red-600 line-through mr-2">AED ${base.sellingPrice.toFixed(2)}</span>
-             <span class="text-sm font-medium text-blue-600">AED ${base.salePrice.toFixed(2)}</span>`
-          : `<p class="text-sm font-medium text-blue-600">AED ${base.sellingPrice.toFixed(2)}</p>`;
+          ? `<div class="price-container">
+               <span class="original-price">${base.sellingPrice.toFixed(2)}</span>
+               <span class="sale-price">AED ${base.salePrice.toFixed(2)}</span>
+             </div>`
+          : `<div class="price-container">
+               <span class="selling-price">AED ${base.sellingPrice.toFixed(2)}</span>
+             </div>`;
 
         return `
           <div class="bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col h-[360px] relative product-card">
@@ -681,6 +789,17 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
+    logoLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      currentCategory = "Featured";
+      currentPage = 1;
+      currentSearchQuery = "";
+      categoryButtons.querySelectorAll("button").forEach(b => b.classList.remove("bg-blue-800"));
+      categoryButtons.querySelector(`button[data-category="Featured"]`)?.classList.add("bg-blue-800");
+      displayProducts("Featured");
+    });
+
     if (menuToggle) {
       menuToggle.addEventListener("click", () => {
         categoryMenu.classList.toggle("active");
@@ -691,6 +810,8 @@
       categoryMenu.querySelectorAll("button").forEach(btn => {
         btn.addEventListener("click", () => {
           categoryMenu.classList.remove("active");
+          categoryMenu.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
           currentPage = 1;
           currentCategory = btn.dataset.category;
           displayProducts(currentCategory, currentSearchQuery);
