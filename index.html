@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Anfal</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <!-- Banner -->
+  <div class="bg-red-600 text-white text-center py-2">
+    Stock Clearance Sale - Grab Your Favorites Now!
+  </div>
+  <!-- Header -->
+  <header class="bg-white shadow sticky top-0 z-10">
+    <div class="container mx-auto flex items-center justify-between py-4 px-4">
+      <div class="flex items-center">
+        <img src="logo.png" alt="The Anfal Logo" class="h-10 mr-4" onerror="this.src='placeholder.jpg'">
+        <h1 class="text-xl font-bold">The Anfal</h1>
+      </div>
+      <div class="relative flex items-center">
+        <input id="searchInput" type="text" placeholder="Search by title or model..." class="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 mr-4">
+        <div class="relative">
+          <button id="cartButton" class="relative">
+            <img src="cart-icon.png" alt="Cart" class="h-8" onerror="this.src='placeholder.jpg'">
+            <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2 text-xs">0</span>
+          </button>
+          <!-- Cart Dropdown Notification -->
+          <div id="cartDropdown" class="absolute right-0 top-10 w-64 bg-white rounded-lg shadow-lg hidden z-20">
+            <div class="p-4">
+              <h3 class="text-sm font-semibold mb-2 text-blue-600">Added to Cart</h3>
+              <div id="cartDropdownItem" class="flex items-center space-x-2">
+                <img id="cartDropdownImage" src="" alt="Product" class="w-12 h-12 object-contain rounded">
+                <div>
+                  <p id="cartDropdownModel" class="text-xs font-medium"></p>
+                  <p id="cartDropdownTitle" class="text-xs text-gray-600"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- Main Content -->
+  <main class="container mx-auto py-6 px-4">
+    <!-- Category Buttons -->
+    <div id="categoryButtons" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
+    <!-- Loading and Error messages -->
+    <div id="loading" class="text-lg text-center">Loading products...</div>
+    <div id="error" class="text-red-600 hidden text-center"></div>
+    <!-- Products Grid -->
+    <div id="products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center gap-4 mt-6"></div>
+  </main>
+  
+  <!-- Variation Modal Popup -->
+  <div id="variationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center px-4">
+    <div class="bg-white p-6 rounded-lg w-full max-w-lg">
+      <h3 id="variationModalTitle" class="text-xl font-bold mb-4"></h3>
+      <div id="variationModalGrid" class="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto"></div>
+      <div id="variationPagination" class="flex justify-center gap-4 mt-4"></div>
+      <div class="mt-4 flex justify-end">
+        <button id="closeVariationModal" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2">Cancel</button>
+        <button id="confirmVariation" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Popup -->
+  <div id="productPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center px-4">
+    <div class="bg-white p-6 rounded-lg w-full max-w-md">
+      <h3 id="productPopupTitle" class="text-xl font-bold mb-4"></h3>
+      <img id="productPopupImage" src="" alt="Product" class="w-full h-64 object-contain rounded mb-4">
+      <p id="productPopupDescription" class="text-sm text-gray-600 mb-4"></p>
+      <p id="productPopupPrice" class="text-lg font-medium mb-4"></p>
+      <div class="flex justify-end gap-2">
+        <button id="closeProductPopup" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Close</button>
+        <button id="productPopupSelect" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"></button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Cart Modal -->
+  <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center px-4 overflow-y-auto">
+    <div class="bg-white p-6 rounded-lg w-full max-w-xl">
+      <h2 class="text-xl font-bold mb-4">Your Cart</h2>
+      <ul id="cartItems" class="space-y-4 mb-4 max-h-96 overflow-y-auto"></ul>
+      <div class="border-t pt-4">
+        <p class="flex justify-between">
+          Subtotal: <span>AED <span id="cartSubtotal">0.00</span></span>
+        </p>
+        <p class="flex justify-between">
+          Courier: <span id="courierFee">AED 15.00</span>
+        </p>
+        <p class="flex justify-between font-semibold">
+          Total: <span>AED <span id="cartTotal">0.00</span></span>
+        </p>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button id="closeCart" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Close</button>
+        <button id="checkout" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Checkout via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-6">
+    <div class="container mx-auto text-center px-4">
+      <p>Contact: +971-568-743529 | Admin@theanfal.com <br> (c) 2023 The Anfal Dot Com LLC </p>
+      <div class="flex justify-center gap-4 mt-2">
+        <a href="https://facebook.com/anfaltrends" target="_blank">
+          <img src="facebook.png" alt="Facebook" class="h-8" onerror="this.src='placeholder.jpg'">
+        </a>
+        <a href="https://instagram.com/anfaltrends" target="_blank">
+          <img src="instagram.png" alt="Instagram" class="h-8" onerror="this.src='placeholder.jpg'">
+        </a>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700 hidden">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+    </svg>
+  </button>
+
+  <script>
+    const loading = document.getElementById("loading");
+    const error = document.getElementById("error");
+    const categoryButtons = document.getElementById("categoryButtons");
+    const productsGrid = document.getElementById("products");
+    const pagination = document.getElementById("pagination");
+    const cartButton = document.getElementById("cartButton");
+    const cartModal = document.getElementById("cartModal");
+    const cartItems = document.getElementById("cartItems");
+    const cartSubtotal = document.getElementById("cartSubtotal");
+    const courierFee = document.getElementById("courierFee");
+    const cartTotal = document.getElementById("cartTotal");
+    const cartCount = document.getElementById("cartCount");
+    const closeCart = document.getElementById("closeCart");
+    const checkout = document.getElementById("checkout");
+    const cartDropdown = document.getElementById("cartDropdown");
+    const cartDropdownImage = document.getElementById("cartDropdownImage");
+    const cartDropdownModel = document.getElementById("cartDropdownModel");
+    const cartDropdownTitle = document.getElementById("cartDropdownTitle");
+    const productPopup = document.getElementById("productPopup");
+    const productPopupImage = document.getElementById("productPopupImage");
+    const productPopupTitle = document.getElementById("productPopupTitle");
+    const productPopupDescription = document.getElementById("productPopupDescription");
+    const productPopupPrice = document.getElementById("productPopupPrice");
+    const productPopupSelect = document.getElementById("productPopupSelect");
+    const closeProductPopup = document.getElementById("closeProductPopup");
+    const searchInput = document.getElementById("searchInput");
+    const backToTop = document.getElementById("backToTop");
+
+    let allProducts = [];
+    let groupedProducts = [];
+    let cart = [];
+    let currentCategory = "Featured";
+    let currentSearchQuery = "";
+    const productsPerPage = 50;
+    let currentPage = 1;
+
+    function loadCart() {
+      const stored = localStorage.getItem("cart");
+      if (stored) {
+        try {
+          cart = JSON.parse(stored);
+        } catch (e) {
+          cart = [];
+        }
+      }
+    }
+
+    function updateCart() {
+      cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+      cartItems.innerHTML = cart
+        .map((item, index) => `
+          <li class="flex items-center justify-between border-b py-2">
+            <div class="flex items-center space-x-4 flex-1">
+              <img src="${item.image}" alt="${item.title}" class="w-12 h-12 object-contain rounded" onerror="this.src='placeholder.jpg'">
+              <div class="flex-1">
+                <p class="text-sm font-medium line-clamp-1">SKU: ${item.sku}</p>
+                <p class="text-xs text-gray-600 line-clamp-1">${item.title.split("|")[0]}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 decrease-qty" data-index="${index}">-</button>
+              <span class="w-8 text-center">${item.quantity}</span>
+              <button class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 increase-qty" data-index="${index}">+</button>
+            </div>
+            <span class="w-20 text-right font-medium shrink-0">AED ${(item.price * item.quantity).toFixed(2)}</span>
+          </li>
+        `)
+        .join("");
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const courier = subtotal > 100 ? 0 : 15;
+      const total = subtotal + courier;
+      cartSubtotal.textContent = subtotal.toFixed(2);
+      courierFee.textContent = `AED ${courier.toFixed(2)}`;
+      cartTotal.textContent = total.toFixed(2);
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    function showCartDropdown(product) {
+      cartDropdownImage.src = product.image;
+      cartDropdownImage.onerror = () => { this.src = 'placeholder.jpg'; };
+      cartDropdownModel.textContent = `Model: ${product.model}`;
+      cartDropdownTitle.textContent = product.title.replace(/\|.*/g, '');
+      cartDropdown.classList.remove("hidden");
+      setTimeout(() => {
+        cartDropdown.classList.add("hidden");
+      }, 3000);
+    }
+
+    document.getElementById("cartItems").addEventListener("click", e => {
+      if (e.target.classList.contains("increase-qty")) {
+        const index = e.target.dataset.index;
+        cart[index].quantity++;
+        updateCart();
+      } else if (e.target.classList.contains("decrease-qty")) {
+        const index = e.target.dataset.index;
+        if (cart[index].quantity > 1) {
+          cart[index].quantity--;
+        } else {
+          cart.splice(index, 1);
+        }
+        updateCart();
+      }
+    });
+
+    let selectedVariant = null;
+    let currentGroupForModal = null;
+    let variationPage = 1;
+    const variationsPerPage = 6;
+
+    function openVariationModal(model) {
+      const group = groupedProducts.find(g => g.model === model);
+      if (!group) return;
+      currentGroupForModal = group;
+      variationPage = 1;
+      document.getElementById("variationModalTitle").textContent = group.variants[0].title.replace(/\|.*/g, '');
+      displayVariations();
+      document.getElementById("variationModal").classList.remove("hidden");
+    }
+
+    function displayVariations() {
+      const group = currentGroupForModal;
+      const totalVariations = group.variants.length;
+      const totalVariationPages = Math.ceil(totalVariations / variationsPerPage);
+      const start = (variationPage - 1) * variationsPerPage;
+      const end = start + variationsPerPage;
+      const paginatedVariants = group.variants.slice(start, end);
+
+      const grid = document.getElementById("variationModalGrid");
+      grid.innerHTML = paginatedVariants.map(v => `
+        <div class="border p-2 rounded cursor-pointer hover:bg-gray-100">
+          <img src="${v.image}" alt="${v.title}" class="w-full h-20 object-contain rounded mb-2" onerror="this.src='placeholder.jpg'" onclick="selectVariant('${v.sku}', this.parentElement)">
+          <div class="text-xs text-center mt-1" onclick="selectVariant('${v.sku}', this.parentElement)">
+            ${v.color ? `<span class="font-medium">Color:</span> ${v.color}` : ""}
+            ${v.size ? `<br><span class="font-medium">Size:</span> ${v.size}` : ""}
+          </div>
+        </div>
+      `).join("");
+
+      const variationPagination = document.getElementById("variationPagination");
+      if (totalVariations <= variationsPerPage) {
+        variationPagination.classList.add("hidden");
+      } else {
+        variationPagination.classList.remove("hidden");
+        variationPagination.innerHTML = `
+          <button id="prevVariationPage" class="px-3 py-1 bg-gray-200 rounded-full hover:bg-gray-300 text-gray-700 font-bold ${variationPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${variationPage === 1 ? 'disabled' : ''}>←</button>
+          <span class="py-1 text-sm font-medium">Page ${variationPage} of ${totalVariationPages}</span>
+          <button id="nextVariationPage" class="px-3 py-1 bg-gray-200 rounded-full hover:bg-gray-300 text-gray-700 font-bold ${variationPage === totalVariationPages ? 'opacity-50 cursor-not-allowed' : ''}" ${variationPage === totalVariationPages ? 'disabled' : ''}>→</button>
+        `;
+
+        document.getElementById("prevVariationPage")?.addEventListener("click", () => {
+          if (variationPage > 1) {
+            variationPage--;
+            displayVariations();
+          }
+        });
+        document.getElementById("nextVariationPage")?.addEventListener("click", () => {
+          if (variationPage < totalVariationPages) {
+            variationPage++;
+            displayVariations();
+          }
+        });
+      }
+
+      selectedVariant = null;
+      document.getElementById("variationModalGrid").children[0]?.querySelector("div").click();
+    }
+
+    function selectVariant(sku, el) {
+      const cards = document.getElementById("variationModalGrid").children;
+      for (let i = 0; i < cards.length; i++) {
+        cards[i].classList.remove("border-green-600", "bg-green-100");
+      }
+      el.classList.add("border-green-600", "bg-green-100");
+      selectedVariant = currentGroupForModal.variants.find(v => v.sku === sku);
+    }
+
+    document.getElementById("closeVariationModal").addEventListener("click", () => {
+      document.getElementById("variationModal").classList.add("hidden");
+    });
+
+    document.getElementById("confirmVariation").addEventListener("click", () => {
+      if (!selectedVariant) {
+        alert("Please select a variant.");
+        return;
+      }
+      loadCart();
+      const existing = cart.find(item => item.sku === selectedVariant.sku);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ ...selectedVariant, quantity: 1 });
+      }
+      updateCart();
+      showCartDropdown(selectedVariant);
+      document.getElementById("variationModal").classList.add("hidden");
+    });
+
+    function openProductPopup(group) {
+      const base = group.variants[0];
+      productPopupImage.src = base.image;
+      productPopupImage.onerror = () => { this.src = 'placeholder.jpg'; };
+      productPopupTitle.textContent = `SKU: ${base.sku}\nTitle: ${base.title.split("|")[0]}`;
+      productPopupDescription.textContent = base.description;
+
+      const priceToShow = base.salePrice && base.salePrice < base.sellingPrice ? base.salePrice : base.sellingPrice;
+      productPopupPrice.textContent = `AED ${priceToShow.toFixed(2)}`;
+      if (base.salePrice && base.salePrice < base.sellingPrice) {
+        productPopupPrice.innerHTML = `
+          <span class="text-sm text-red-600 line-through mr-2">AED ${base.sellingPrice.toFixed(2)}</span>
+          <span class="text-lg font-medium text-blue-600">AED ${base.salePrice.toFixed(2)}</span>
+        `;
+      } else {
+        productPopupPrice.classList.add("text-blue-600");
+      }
+
+      productPopupSelect.textContent = group.variants.length > 1 ? "Select Variant" : "Add to Cart";
+      productPopupSelect.classList.remove("hidden");
+      productPopupSelect.onclick = () => {
+        if (group.variants.length > 1) {
+          productPopup.classList.add("hidden");
+          openVariationModal(group.model);
+        } else {
+          addToCart(base);
+          productPopup.classList.add("hidden");
+        }
+      };
+      productPopup.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function enlargeImage(imageSrc, identifier) {
+      productPopupImage.src = imageSrc;
+      productPopupImage.onerror = () => { this.src = 'placeholder.jpg'; };
+      productPopupTitle.textContent = `SKU: ${identifier}`;
+      productPopupDescription.textContent = "";
+      productPopupPrice.textContent = "";
+      productPopupSelect.classList.add("hidden");
+      productPopup.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    closeProductPopup.addEventListener("click", () => {
+      productPopup.classList.add("hidden");
+      document.body.style.overflow = "";
+    });
+
+    productPopup.addEventListener("click", (e) => {
+      if (e.target === productPopup) {
+        productPopup.classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+    });
+
+    async function loadProducts() {
+      try {
+        loadCart();
+        const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSLAdm3vi00C8DPaMRjbxB9GWYiW_DHDFRRrdZtRP_qfifxZC6rMkcSIE2vavWWmicwW-jEfNf9IPh2/pub?gid=599223842&single=true&output=csv&t=" + new Date().getTime());
+        if (!response.ok) throw new Error("Cannot find Listing.csv");
+        const csvText = await response.text();
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: false,
+          transformHeader: header => header.trim().replace(/^"|"$/g, ""),
+          transform: value => value.trim().replace(/^"|"$/g, ""),
+          complete: results => {
+            allProducts = results.data
+              .filter(row => row["List/Unlist"] === "List" && row.SKU && row.Title && row["Selling Price"] && row.Model)
+              .map(row => ({
+                sku: row.SKU || "",
+                model: row.Model || "",
+                title: row.Title || "",
+                category: row.Category || "Uncategorized",
+                sellingPrice: parseFloat(row["Selling Price"]) || 0,
+                salePrice: parseFloat(row["Sale Price"]) || null,
+                image: row.Image ? `Product_Images/${row.Image.split("/").pop()}` : "placeholder.jpg",
+                color: row.Color || "",
+                size: row.Size || "",
+                description: row.Description || "A stylish and functional accessory for all your needs.",
+                featured: row.Featured || "",
+                price: parseFloat(row["Sale Price"] && parseFloat(row["Sale Price"]) < parseFloat(row["Selling Price"]) ? row["Sale Price"] : row["Selling Price"]) || 0
+              }))
+              .filter(row => row.price > 0);
+
+            const groups = {};
+            allProducts.forEach(product => {
+              const model = product.model;
+              if (!groups[model]) groups[model] = [];
+              groups[model].push(product);
+            });
+
+            groupedProducts = Object.keys(groups).map(model => ({
+              model: model,
+              variants: groups[model]
+            })).sort((a, b) => {
+              const aFeatured = a.variants.some(v => v.featured === "Y");
+              const bFeatured = b.variants.some(v => v.featured === "Y");
+              return bFeatured - aFeatured;
+            });
+
+            loading.classList.add("hidden");
+            if (groupedProducts.length === 0) {
+              error.textContent = "No products found.";
+              error.classList.remove("hidden");
+              return;
+            }
+
+            const categoriesSet = new Set();
+            groupedProducts.forEach(group => {
+              categoriesSet.add(group.variants[0].category);
+            });
+            const categories = ["Featured", "All", ...categoriesSet];
+            categoryButtons.innerHTML = categories.map(cat => `
+              <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow ${cat === "Featured" ? "bg-blue-800" : ""}" data-category="${cat}">${cat}</button>
+            `).join("");
+            displayProducts("Featured");
+            updateCart();
+
+            categoryButtons.querySelectorAll("button").forEach(btn => {
+              btn.addEventListener("click", () => {
+                categoryButtons.querySelectorAll("button").forEach(b => b.classList.remove("bg-blue-800"));
+                btn.classList.add("bg-blue-800");
+                currentPage = 1;
+                currentCategory = btn.dataset.category;
+                displayProducts(currentCategory, currentSearchQuery);
+              });
+            });
+
+            searchInput.addEventListener("input", (e) => {
+              currentSearchQuery = e.target.value.toLowerCase();
+              currentPage = 1;
+              displayProducts(currentCategory, currentSearchQuery);
+            });
+          },
+          error: err => {
+            loading.classList.add("hidden");
+            error.textContent = "Failed to load products.";
+            error.classList.remove("hidden");
+            console.error("PapaParse error:", err);
+          }
+        });
+      } catch (err) {
+        loading.classList.add("hidden");
+        error.textContent = "Cannot find Listing.csv. Please check the file.";
+        error.classList.remove("hidden");
+        console.error("Fetch error:", err);
+      }
+    }
+
+    function displayProducts(category, searchQuery = "") {
+      let filteredGroups = groupedProducts;
+
+      if (category === "Featured") {
+        filteredGroups = groupedProducts.filter(group => group.variants.some(v => v.featured === "Y"));
+      } else if (category !== "All") {
+        filteredGroups = groupedProducts.filter(group => group.variants[0].category === category);
+      }
+
+      if (searchQuery) {
+        filteredGroups = filteredGroups.filter(group => 
+          group.variants[0].title.toLowerCase().includes(searchQuery) || 
+          group.model.toLowerCase().includes(searchQuery)
+        );
+      }
+
+      const totalPages = Math.ceil(filteredGroups.length / productsPerPage);
+      const start = (currentPage - 1) * productsPerPage;
+      const end = start + productsPerPage;
+      const paginatedGroups = filteredGroups.slice(start, end);
+
+      productsGrid.innerHTML = paginatedGroups.map(group => {
+        const base = group.variants[0];
+        const isOnSale = base.salePrice && base.salePrice < base.sellingPrice;
+        const priceDisplay = isOnSale
+          ? `<span class="text-sm text-red-600 line-through mr-2">AED ${base.sellingPrice.toFixed(2)}</span>
+             <span class="text-sm font-medium text-blue-600">AED ${base.salePrice.toFixed(2)}</span>`
+          : `<p class="text-sm font-medium text-blue-600">AED ${base.sellingPrice.toFixed(2)}</p>`;
+
+        return `
+          <div class="bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col h-[360px] relative">
+            ${isOnSale ? `<span class="absolute top-2 right-2 text-2xl">🔥</span>` : ''}
+            <div class="flex-1" onclick="openProductPopup({ model: '${group.model}', variants: ${JSON.stringify(group.variants)} })">
+              <h3 class="font-semibold text-sm leading-tight line-clamp-2 mb-1">SKU: ${base.sku}<br>Title: ${base.title.split("|")[0]}</h3>
+              <p class="text-xs text-gray-600 leading-tight line-clamp-2 mb-4">${base.description}</p>
+            </div>
+            <div class="w-full h-48">
+              <img src="${base.image}" alt="${base.title}" class="w-full h-full object-contain rounded cursor-pointer" onerror="this.src='placeholder.jpg'" onclick="enlargeImage('${base.image}', '${base.sku}'); event.stopPropagation();">
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+              ${priceDisplay}
+              <button class="add-to-cart px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" data-sku="${base.sku}" data-model="${group.model}">${group.variants.length > 1 ? 'Select' : 'Add to Cart'}</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      pagination.innerHTML = `
+        <button id="prevPage" class="p-2 bg-gray-300 rounded-full hover:bg-gray-400 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}" ${currentPage === 1 ? "disabled" : ""}>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <span class="py-2">Page ${currentPage} of ${totalPages}</span>
+        <button id="nextPage" class="p-2 bg-gray-300 rounded-full hover:bg-gray-400 ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}" ${currentPage === totalPages ? "disabled" : ""}>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      `;
+
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      if (prevPage) {
+        prevPage.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            displayProducts(category, searchQuery);
+          }
+        });
+      }
+      if (nextPage) {
+        nextPage.addEventListener("click", () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            displayProducts(category, searchQuery);
+          }
+        });
+      }
+
+      document.querySelectorAll(".add-to-cart").forEach(btn => {
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          const sku = btn.dataset.sku;
+          const model = btn.dataset.model;
+          const group = groupedProducts.find(g => g.model === model);
+          if (group.variants.length > 1) {
+            openVariationModal(model);
+          } else {
+            const product = allProducts.find(p => p.sku === sku);
+            if (product) addToCart(product);
+          }
+        });
+      });
+    }
+
+    function addToCart(product) {
+      loadCart();
+      const cartItem = cart.find(item => item.sku === product.sku);
+      if (cartItem) {
+        cartItem.quantity++;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+      updateCart();
+      showCartDropdown(product);
+    }
+
+    cartButton.addEventListener("click", () => {
+      cartModal.classList.toggle("hidden");
+      cartDropdown.classList.add("hidden");
+      document.body.style.overflow = "hidden";
+    });
+    closeCart.addEventListener("click", () => {
+      cartModal.classList.add("hidden");
+      document.body.style.overflow = "";
+    });
+    checkout.addEventListener("click", () => {
+      if (cart.length === 0) return;
+      const orderNumber = Math.floor(100000 + Math.random() * 900000);
+      const items = cart.map(item => `${item.sku} x ${item.quantity} = ${(item.price * item.quantity).toFixed(2)}`).join("\n");
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const courier = subtotal > 100 ? "Free" : "AED 15.00";
+      const total = subtotal + (subtotal > 100 ? 0 : 15);
+      const message = `Order #${orderNumber}\n\nHello! I would like to place order for\n${items}\n\nSub: ${subtotal.toFixed(2)} AED\nShipping: ${courier}\nTotal: ${total.toFixed(2)} AED`;
+      const whatsappUrl = `https://wa.me/+971568743529?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+      cart = [];
+      updateCart();
+      cartModal.classList.add("hidden");
+      document.body.style.overflow = "";
+    });
+
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        backToTop.classList.remove("hidden");
+      } else {
+        backToTop.classList.add("hidden");
+      }
+    });
+
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.addEventListener("DOMContentLoaded", loadProducts);
+  </script>
+</body>
+</html>
