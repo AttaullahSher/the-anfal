@@ -7,6 +7,24 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Meta Pixel Code -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '337677301926610');
+    fbq('track', 'PageView');
+  </script>
+  <noscript>
+    <img height="1" width="1" style="display:none" 
+         src="https://www.facebook.com/tr?id=337677301926610&ev=PageView&noscript=1"/>
+  </noscript>
+  <!-- End Meta Pixel Code -->
   <style>
     .line-clamp-2 {
       display: -webkit-box;
@@ -127,23 +145,24 @@
   </div>
 
   <!-- Footer -->
-<footer class="bg-gray-800 text-white py-6">
-  <div class="container mx-auto text-center px-4">
-    <p class="text-sm md:text-base">
-      Whatsapp: <a href="https://wa.me/+971568743529" target="_blank" class="underline hover:text-blue-300">+971-568-743529</a> | 
-      <a href="mailto:Admin@theanfal.com" class="underline hover:text-blue-300">Admin@theanfal.com</a>
-    </p>
-    <p class="text-xs md:text-sm mt-1">(c) 2025 The Anfal Dot Com LLC</p>
-    <div class="flex justify-center gap-4 mt-3">
-      <a href="https://facebook.com/anfaltrends" target="_blank" aria-label="Facebook">
-        <img src="facebook.png" alt="Facebook" class="h-6 md:h-8" onerror="this.src='https://via.placeholder.com/32?text=FB'">
-      </a>
-      <a href="https://instagram.com/anfaltrends" target="_blank" aria-label="Instagram">
-        <img src="instagram.png" alt="Instagram" class="h-6 md:h-8" onerror="this.src='https://via.placeholder.com/32?text=IG'">
-      </a>
+  <footer class="bg-gray-800 text-white py-6">
+    <div class="container mx-auto text-center px-4">
+      <p class="text-sm md:text-base">
+        Contact: <a href="https://wa.me/+971568743529" target="_blank" class="underline hover:text-blue-300">+971-568-743529</a> | 
+        <a href="mailto:Admin@theanfal.com" class="underline hover:text-blue-300">Admin@theanfal.com</a>
+      </p>
+      <p class="text-xs md:text-sm mt-1">(c) 2025 The Anfal Dot Com LLC</p>
+      <p class="text-xs mt-1">This site uses cookies and tracking technologies, including Meta Pixel, to enhance your experience and analyze site traffic. By continuing to use this site, you consent to our use of cookies. Learn more in our <a href="/privacy-policy" class="underline hover:text-blue-300">Privacy Policy</a>.</p>
+      <div class="flex justify-center gap-4 mt-3">
+        <a href="https://facebook.com/anfaltrends" target="_blank" aria-label="Facebook">
+          <img src="facebook.png" alt="Facebook" class="h-6 md:h-8" onerror="this.src='https://via.placeholder.com/32?text=FB'">
+        </a>
+        <a href="https://instagram.com/anfaltrends" target="_blank" aria-label="Instagram">
+          <img src="instagram.png" alt="Instagram" class="h-6 md:h-8" onerror="this.src='https://via.placeholder.com/32?text=IG'">
+        </a>
+      </div>
     </div>
-  </div>
-</footer>
+  </footer>
 
   <!-- Back to Top Button -->
   <button id="backToTop" class="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700 hidden z-40" aria-label="Back to Top">
@@ -352,8 +371,7 @@
         });
       }
 
-      selec
-tedVariant = null;
+      selectedVariant = null;
       document.getElementById("variationModalGrid").children[0]?.click();
     }
 
@@ -385,6 +403,13 @@ tedVariant = null;
       }
       updateCart();
       showCartDropdown(selectedVariant);
+      // Track AddToCart event for Meta Pixel
+      fbq('track', 'AddToCart', {
+        content_ids: [selectedVariant.sku],
+        content_type: 'product',
+        value: selectedVariant.price,
+        currency: 'AED'
+      });
       document.getElementById("variationModal").classList.add("hidden");
       document.body.style.overflow = "";
     });
@@ -671,12 +696,28 @@ tedVariant = null;
       }
       updateCart();
       showCartDropdown(product);
+      // Track AddToCart event for Meta Pixel
+      fbq('track', 'AddToCart', {
+        content_ids: [product.sku],
+        content_type: 'product',
+        value: product.price,
+        currency: 'AED'
+      });
     }
 
     cartButton.addEventListener("click", () => {
       cartModal.classList.toggle("hidden");
       cartDropdown.classList.add("hidden");
       document.body.style.overflow = cartModal.classList.contains("hidden") ? "" : "hidden";
+      // Track InitiateCheckout event for Meta Pixel
+      if (!cartModal.classList.contains("hidden") && cart.length > 0) {
+        fbq('track', 'InitiateCheckout', {
+          value: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          currency: 'AED',
+          content_ids: cart.map(item => item.sku),
+          content_type: 'product'
+        });
+      }
     });
 
     closeCart.addEventListener("click", () => {
@@ -691,6 +732,14 @@ tedVariant = null;
       const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const courier = subtotal > 100 ? "Free" : "AED 15.00";
       const total = subtotal + (subtotal > 100 ? 0 : 15);
+      // Track Purchase event for Meta Pixel
+      fbq('track', 'Purchase', {
+        value: total,
+        currency: 'AED',
+        content_ids: cart.map(item => item.sku),
+        content_type: 'product',
+        order_id: orderNumber
+      });
       const message = `Order #${orderNumber}\n\nHello! I would like to place order for\n${items}\n\nSub: ${subtotal.toFixed(2)} AED\nShipping: ${courier}\nTotal: ${total.toFixed(2)} AED`;
       const whatsappUrl = `https://wa.me/+971568743529?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
