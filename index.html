@@ -502,7 +502,7 @@
                 size: row.Size || "",
                 description: row.Description || "A stylish and functional accessory for all your needs.",
                 featured: row.Featured || "",
-                image: row.SKU ? `Product_Images/${row.SKU}.jpg` : "",
+                image: row.SKU ? `Product_Images/${row.SKU}` : "",
                 price: parseFloat(row["Sale Price"] && parseFloat(row["Sale Price"]) < parseFloat(row["Selling Price"]) ? row["Sale Price"] : row["Selling Price"]) || 0
               }))
               .filter(row => row.price > 0 && row.image);
@@ -625,7 +625,7 @@
               <p class="text-xs text-gray-600 leading-tight line-clamp-2 mb-2 md:mb-4">${base.description}</p>
             </div>
             <div class="w-full h-32 md:h-48">
-              <img src="${base.image}" alt="${base.title}" class="w-full h-full object-contain rounded" loading="lazy" onerror="this.src='https://via.placeholder.com/200?text=Product'" onclick="enlargeImage('${base.image}', '${base.sku}'); event.stopPropagation();">
+              <img src="${base.image}.jpg" alt="${base.title}" class="w-full h-full object-contain rounded" loading="lazy" onerror="handleImageError(this, '${base.image}')" onclick="enlargeImage('${base.image}', '${base.sku}'); event.stopPropagation();">
             </div>
             <div class="mt-2 md:mt-4 flex justify-between items-center">
               <div class="flex flex-col">${priceDisplay}</div>
@@ -766,6 +766,17 @@
     });
 
     document.addEventListener("DOMContentLoaded", loadProducts);
+    function handleImageError(img, basePath) {
+      if (!img.attempts) img.attempts = 0;
+      img.attempts++;
+      if (img.attempts === 1) {
+        img.src = basePath + ".jpeg";
+      } else if (img.attempts === 2) {
+        img.src = basePath + ".png";
+      } else {
+        img.src = "https://via.placeholder.com/200?text=Product";
+      }
+    }
   </script>
-</body>
-</html>
+  </body>
+  </html>
