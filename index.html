@@ -502,7 +502,7 @@
                 size: row.Size || "",
                 description: row.Description || "A stylish and functional accessory for all your needs.",
                 featured: row.Featured || "",
-image: row.SKU ? `/Product_Images/${row.SKU}` : "",
+image: row.SKU ? `/Product_Images/${row.SKU.split(' ')[0]}` : "",
                 price: parseFloat(row["Sale Price"] && parseFloat(row["Sale Price"]) < parseFloat(row["Selling Price"]) ? row["Sale Price"] : row["Selling Price"]) || 0
               }))
               .filter(row => row.price > 0 && row.image);
